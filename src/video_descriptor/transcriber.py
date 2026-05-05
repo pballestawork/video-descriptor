@@ -4,7 +4,9 @@ import gc
 import json
 import shutil
 import subprocess
+import time
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -50,11 +52,13 @@ def extract_audio(input_video: Path, output_audio: Path) -> Path:
         "1",
         str(output_audio),
     ]
+    log("Running ffmpeg audio extraction")
+    start = time.monotonic()
     try:
-        subprocess.run(command, check=True, capture_output=True, text=True)
+        subprocess.run(command, check=True)
     except subprocess.CalledProcessError as exc:
-        detail = exc.stderr.strip() or exc.stdout.strip()
-        raise RuntimeError(f"ffmpeg could not extract audio: {detail}") from exc
+        raise RuntimeError("ffmpeg could not extract audio.") from exc
+    log(f"Audio extraction finished in {format_duration(time.monotonic() - start)}")
     return output_audio
 
 
@@ -73,12 +77,16 @@ def run_transcription(config: TranscriptionConfig) -> TranscriptionOutputs:
     srt_path = output_dir / f"{base_name}.srt"
     vtt_path = output_dir / f"{base_name}.vtt"
 
-    print(f"Extracting audio to {audio_path}")
+    log(f"Input video: {input_video} ({format_bytes(input_video.stat().st_size)})")
+    log(f"Output directory: {output_dir}")
+    log(f"Extracting audio to {audio_path}")
     extract_audio(input_video, audio_path)
+    log(f"Extracted audio size: {format_bytes(audio_path.stat().st_size)}")
 
-    print("Loading WhisperX")
+    log("Starting WhisperX pipeline")
     result = transcribe_audio_with_whisperx(audio_path, config)
 
+    log("Writing transcript files")
     json_path.write_text(
         json.dumps(result, ensure_ascii=False, indent=2),
         encoding="utf-8",
@@ -86,6 +94,7 @@ def run_transcription(config: TranscriptionConfig) -> TranscriptionOutputs:
     write_txt(result, txt_path)
     write_srt(result, srt_path)
     write_vtt(result, vtt_path)
+    log(f"Generated {len(result.get('segments', []))} segments")
 
     return TranscriptionOutputs(
         audio_path=audio_path,
@@ -113,18 +122,31 @@ def transcribe_audio_with_whisperx(
     compute_type = resolve_compute_type(config.compute_type, device)
     language = None if config.language in {None, "", "auto"} else config.language
 
-    print(
+    log(
         "Transcribing with "
         f"model={config.model}, language={language or 'auto'}, "
         f"device={device}, compute_type={compute_type}, batch_size={config.batch_size}"
     )
 
+    start = time.monotonic()
+    log("Loading ASR model")
     model = whisperx.load_model(config.model, device, compute_type=compute_type)
+    log(f"ASR model loaded in {format_duration(time.monotonic() - start)}")
+
+    log("Loading audio into WhisperX")
     audio = whisperx.load_audio(str(audio_path))
     transcribe_kwargs: dict[str, Any] = {"batch_size": config.batch_size}
     if language:
         transcribe_kwargs["language"] = language
+
+    start = time.monotonic()
+    log("Running transcription")
     result = model.transcribe(audio, **transcribe_kwargs)
+    log(
+        "Transcription finished in "
+        f"{format_duration(time.monotonic() - start)} with "
+        f"{len(result.get('segments', []))} raw segments"
+    )
 
     del model
     free_memory(torch)
@@ -133,11 +155,13 @@ def transcribe_audio_with_whisperx(
     if not detected_language:
         return result
 
-    print(f"Aligning timestamps for language={detected_language}")
+    start = time.monotonic()
+    log(f"Loading alignment model for language={detected_language}")
     model_a, metadata = whisperx.load_align_model(
         language_code=detected_language,
         device=device,
     )
+    log("Running timestamp alignment")
     result = whisperx.align(
         result["segments"],
         model_a,
@@ -147,6 +171,7 @@ def transcribe_audio_with_whisperx(
         return_char_alignments=False,
     )
     result["language"] = detected_language
+    log(f"Alignment finished in {format_duration(time.monotonic() - start)}")
 
     del model_a
     free_memory(torch)
@@ -169,3 +194,24 @@ def free_memory(torch_module: Any) -> None:
     gc.collect()
     if torch_module.cuda.is_available():
         torch_module.cuda.empty_cache()
+
+
+def log(message: str) -> None:
+    timestamp = datetime.now().strftime("%H:%M:%S")
+    print(f"[{timestamp}] {message}", flush=True)
+
+
+def format_duration(seconds: float) -> str:
+    if seconds < 60:
+        return f"{seconds:.1f}s"
+    minutes, remaining_seconds = divmod(seconds, 60)
+    return f"{int(minutes)}m {remaining_seconds:.0f}s"
+
+
+def format_bytes(size: int) -> str:
+    value = float(size)
+    for unit in ("B", "KB", "MB", "GB"):
+        if value < 1024 or unit == "GB":
+            return f"{value:.1f} {unit}"
+        value /= 1024
+    return f"{value:.1f} GB"

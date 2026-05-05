@@ -51,6 +51,8 @@ In Colab, use the notebook install cell. The project pins `whisperx==3.3.0`, `to
 W: Skipping acquire of configured file 'main/source/Sources' ...
 ```
 
+The first install can take several minutes because PyTorch CUDA wheels are large. The notebook prints each install step, elapsed time and `pip` download progress so you can see that Colab is still working.
+
 Run a transcription:
 
 ```bash

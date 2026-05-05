@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "video-descriptor"
+version = "0.1.0"
+description = "Extract audio from long videos and transcribe it with WhisperX in Google Colab."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Pablo Ballesta" }]
+dependencies = []
+
+[project.optional-dependencies]
+colab = ["whisperx"]
+dev = []
+
+[project.scripts]
+video-descriptor = "video_descriptor.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -55,6 +55,8 @@ The first install can take several minutes because PyTorch CUDA wheels are large
 
 If you stop the install cell manually, Colab will show a `KeyboardInterrupt`. That only means the running `pip` process was cancelled. The notebook does not mark the install as complete until every step finishes, so the cleanest recovery is to delete the runtime and run the install cell again.
 
+PyTorch 2.6+ changed `torch.load` to use `weights_only=True` by default. WhisperX 3.3.0 loads a trusted pyannote VAD checkpoint that still needs the previous behavior, so the CLI sets `weights_only=False` inside the isolated transcription process before loading WhisperX models.
+
 Run a transcription:
 
 ```bash

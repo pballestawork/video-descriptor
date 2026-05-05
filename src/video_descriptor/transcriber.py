@@ -111,6 +111,15 @@ def transcribe_audio_with_whisperx(
 ) -> dict[str, Any]:
     try:
         import torch
+    except ImportError as exc:
+        raise RuntimeError(
+            "WhisperX dependencies are not installed. In Colab, run "
+            "`pip install -r requirements-colab.txt` after installing this project."
+        ) from exc
+
+    allow_trusted_whisperx_checkpoints(torch)
+
+    try:
         import whisperx
     except ImportError as exc:
         raise RuntimeError(
@@ -194,6 +203,23 @@ def free_memory(torch_module: Any) -> None:
     gc.collect()
     if torch_module.cuda.is_available():
         torch_module.cuda.empty_cache()
+
+
+def allow_trusted_whisperx_checkpoints(torch_module: Any) -> None:
+    original_load = torch_module.load
+    if getattr(original_load, "_video_descriptor_weights_patch", False):
+        return
+
+    def patched_load(*args: Any, **kwargs: Any) -> Any:
+        kwargs.setdefault("weights_only", False)
+        return original_load(*args, **kwargs)
+
+    patched_load._video_descriptor_weights_patch = True  # type: ignore[attr-defined]
+    torch_module.load = patched_load
+    log(
+        "Configured torch.load(weights_only=False) for trusted "
+        "WhisperX/Pyannote checkpoints"
+    )
 
 
 def log(message: str) -> None:

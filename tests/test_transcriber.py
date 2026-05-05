@@ -6,6 +6,7 @@ from unittest import TestCase, skipIf
 
 from video_descriptor.transcriber import (
     TranscriptionConfig,
+    allow_trusted_whisperx_checkpoints,
     extract_audio,
     resolve_compute_type,
     run_transcription,
@@ -25,6 +26,23 @@ class TranscriberTests(TestCase):
     def test_cpu_compute_type_is_int8(self) -> None:
         self.assertEqual(resolve_compute_type("float16", "cpu"), "int8")
         self.assertEqual(resolve_compute_type("float16", "cuda"), "float16")
+
+    def test_torch_load_patch_defaults_weights_only_false(self) -> None:
+        calls = []
+
+        class TorchStub:
+            @staticmethod
+            def load(*args, **kwargs):
+                calls.append(kwargs)
+                return "ok"
+
+        allow_trusted_whisperx_checkpoints(TorchStub)
+
+        self.assertEqual(TorchStub.load("checkpoint.ckpt"), "ok")
+        self.assertEqual(calls[-1]["weights_only"], False)
+
+        TorchStub.load("checkpoint.ckpt", weights_only=True)
+        self.assertEqual(calls[-1]["weights_only"], True)
 
     @skipIf(shutil.which("ffmpeg") is None, "ffmpeg is required")
     def test_extract_audio_from_synthetic_video(self) -> None:

@@ -30,3 +30,28 @@ class FormatTests(TestCase):
             self.assertIn("Hola mundo", txt_path.read_text(encoding="utf-8"))
             self.assertIn("00:00:00,000 --> 00:00:01,500", srt_path.read_text(encoding="utf-8"))
             self.assertTrue(vtt_path.read_text(encoding="utf-8").startswith("WEBVTT"))
+
+    def test_writers_include_speaker_labels(self) -> None:
+        result = {
+            "segments": [
+                {
+                    "start": 0.0,
+                    "end": 1.5,
+                    "text": "Hola",
+                    "speaker_label": "Persona A",
+                }
+            ]
+        }
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            txt_path = root / "out.txt"
+            srt_path = root / "out.srt"
+            vtt_path = root / "out.vtt"
+
+            write_txt(result, txt_path)
+            write_srt(result, srt_path)
+            write_vtt(result, vtt_path)
+
+            self.assertIn("Persona A: Hola", txt_path.read_text(encoding="utf-8"))
+            self.assertIn("Persona A: Hola", srt_path.read_text(encoding="utf-8"))
+            self.assertIn("Persona A: Hola", vtt_path.read_text(encoding="utf-8"))

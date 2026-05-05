@@ -24,6 +24,24 @@ def build_parser() -> argparse.ArgumentParser:
     transcribe.add_argument("--batch-size", type=int, default=16)
     transcribe.add_argument("--compute-type", default="float16")
     transcribe.add_argument(
+        "--diarize",
+        action="store_true",
+        help="Assign speaker labels using WhisperX/Pyannote diarization.",
+    )
+    transcribe.add_argument(
+        "--hf-token",
+        default=None,
+        help="Hugging Face token for pyannote diarization. Prefer HF_TOKEN env var.",
+    )
+    transcribe.add_argument(
+        "--num-speakers",
+        type=int,
+        default=None,
+        help="Exact number of speakers, e.g. 2 for Persona A and Persona B.",
+    )
+    transcribe.add_argument("--min-speakers", type=int, default=None)
+    transcribe.add_argument("--max-speakers", type=int, default=None)
+    transcribe.add_argument(
         "--device",
         choices=["auto", "cuda", "cpu"],
         default="auto",
@@ -45,6 +63,11 @@ def main(argv: list[str] | None = None) -> int:
                 batch_size=args.batch_size,
                 compute_type=args.compute_type,
                 device=args.device,
+                diarize=args.diarize,
+                hf_token=args.hf_token,
+                num_speakers=args.num_speakers,
+                min_speakers=args.min_speakers,
+                max_speakers=args.max_speakers,
             )
         )
         print("Done. Generated:")

@@ -14,7 +14,7 @@
 6. Run the transcription cell.
 7. Download the generated ZIP with transcript files.
 
-The default model is `large-v3-turbo`, the default language is Spanish (`es`), and diarization is intentionally disabled in v1.
+The default model is `large-v3-turbo`, the default language is Spanish (`es`), and the Colab notebook enables diarization for two speakers by default.
 
 ## Large video note
 
@@ -70,6 +70,19 @@ python -m video_descriptor transcribe INPUT_VIDEO \
   --compute-type float16 \
   --device auto
 ```
+
+To identify two interlocutors as `Persona A` and `Persona B`, enable diarization:
+
+```bash
+export HF_TOKEN="your_huggingface_token"
+python -m video_descriptor transcribe INPUT_VIDEO \
+  --output-dir outputs \
+  --language es \
+  --diarize \
+  --num-speakers 2
+```
+
+Diarization uses pyannote through WhisperX and requires a Hugging Face token with access to the pyannote diarization model terms accepted. WhisperX assigns voice clusters, not real names, so the project maps speakers to `Persona A`, `Persona B`, etc.
 
 When `--device auto` is used, the tool selects CUDA when available. If it falls back to CPU, it uses `int8` compute type to avoid unsupported/expensive `float16` CPU execution.
 

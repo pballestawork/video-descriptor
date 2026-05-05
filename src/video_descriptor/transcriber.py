@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import gc
 import json
+import os
 import shutil
 import subprocess
 import time
@@ -22,6 +23,11 @@ class TranscriptionConfig:
     batch_size: int = 16
     compute_type: str = "float16"
     device: str = "auto"
+    diarize: bool = False
+    hf_token: str | None = None
+    num_speakers: int | None = None
+    min_speakers: int | None = None
+    max_speakers: int | None = None
 
 
 @dataclass(frozen=True)
@@ -184,6 +190,10 @@ def transcribe_audio_with_whisperx(
 
     del model_a
     free_memory(torch)
+
+    if config.diarize:
+        result = diarize_audio(audio_path, result, config, whisperx, device, torch)
+
     return result
 
 
@@ -203,6 +213,75 @@ def free_memory(torch_module: Any) -> None:
     gc.collect()
     if torch_module.cuda.is_available():
         torch_module.cuda.empty_cache()
+
+
+def diarize_audio(
+    audio_path: Path,
+    result: dict[str, Any],
+    config: TranscriptionConfig,
+    whisperx_module: Any,
+    device: str,
+    torch_module: Any,
+) -> dict[str, Any]:
+    hf_token = config.hf_token or os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACE_TOKEN")
+    if not hf_token:
+        raise RuntimeError(
+            "Speaker diarization requires a Hugging Face token. Set HF_TOKEN in "
+            "Colab and accept the pyannote/speaker-diarization model terms."
+        )
+
+    start = time.monotonic()
+    log("Running speaker diarization")
+    diarize_model = whisperx_module.DiarizationPipeline(
+        use_auth_token=hf_token,
+        device=device,
+    )
+    diarize_kwargs = speaker_count_kwargs(config)
+    if diarize_kwargs:
+        log(f"Diarization speaker constraints: {diarize_kwargs}")
+    diarize_segments = diarize_model(str(audio_path), **diarize_kwargs)
+    result = whisperx_module.assign_word_speakers(diarize_segments, result)
+    apply_person_labels(result)
+    log(f"Diarization finished in {format_duration(time.monotonic() - start)}")
+
+    del diarize_model
+    free_memory(torch_module)
+    return result
+
+
+def speaker_count_kwargs(config: TranscriptionConfig) -> dict[str, int]:
+    if config.num_speakers is not None:
+        return {
+            "min_speakers": config.num_speakers,
+            "max_speakers": config.num_speakers,
+        }
+
+    kwargs = {}
+    if config.min_speakers is not None:
+        kwargs["min_speakers"] = config.min_speakers
+    if config.max_speakers is not None:
+        kwargs["max_speakers"] = config.max_speakers
+    return kwargs
+
+
+def apply_person_labels(result: dict[str, Any]) -> dict[str, str]:
+    speaker_map: dict[str, str] = {}
+    for segment in result.get("segments", []):
+        speaker = segment.get("speaker")
+        if speaker:
+            segment["speaker_label"] = person_label(str(speaker), speaker_map)
+        for word in segment.get("words", []):
+            word_speaker = word.get("speaker")
+            if word_speaker:
+                word["speaker_label"] = person_label(str(word_speaker), speaker_map)
+    result["speaker_labels"] = speaker_map
+    return speaker_map
+
+
+def person_label(speaker: str, speaker_map: dict[str, str]) -> str:
+    if speaker not in speaker_map:
+        speaker_map[speaker] = f"Persona {chr(ord('A') + len(speaker_map))}"
+    return speaker_map[speaker]
 
 
 def allow_trusted_whisperx_checkpoints(torch_module: Any) -> None:

@@ -211,7 +211,7 @@ def allow_trusted_whisperx_checkpoints(torch_module: Any) -> None:
         return
 
     def patched_load(*args: Any, **kwargs: Any) -> Any:
-        kwargs.setdefault("weights_only", False)
+        kwargs["weights_only"] = False
         return original_load(*args, **kwargs)
 
     patched_load._video_descriptor_weights_patch = True  # type: ignore[attr-defined]

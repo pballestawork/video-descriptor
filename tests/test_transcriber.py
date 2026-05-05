@@ -27,7 +27,7 @@ class TranscriberTests(TestCase):
         self.assertEqual(resolve_compute_type("float16", "cpu"), "int8")
         self.assertEqual(resolve_compute_type("float16", "cuda"), "float16")
 
-    def test_torch_load_patch_defaults_weights_only_false(self) -> None:
+    def test_torch_load_patch_forces_weights_only_false(self) -> None:
         calls = []
 
         class TorchStub:
@@ -42,7 +42,7 @@ class TranscriberTests(TestCase):
         self.assertEqual(calls[-1]["weights_only"], False)
 
         TorchStub.load("checkpoint.ckpt", weights_only=True)
-        self.assertEqual(calls[-1]["weights_only"], True)
+        self.assertEqual(calls[-1]["weights_only"], False)
 
     @skipIf(shutil.which("ffmpeg") is None, "ffmpeg is required")
     def test_extract_audio_from_synthetic_video(self) -> None:

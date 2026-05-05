@@ -84,6 +84,11 @@ python -m video_descriptor transcribe INPUT_VIDEO \
 
 Diarization uses pyannote through WhisperX and requires a Hugging Face token with access to the pyannote diarization model terms accepted. WhisperX assigns voice clusters, not real names, so the project maps speakers to `Persona A`, `Persona B`, etc.
 
+Before running diarization, log in with the same Hugging Face account used for `HF_TOKEN` and accept both gated model terms:
+
+- https://huggingface.co/pyannote/segmentation-3.0
+- https://huggingface.co/pyannote/speaker-diarization-3.1
+
 When `--device auto` is used, the tool selects CUDA when available. If it falls back to CPU, it uses `int8` compute type to avoid unsupported/expensive `float16` CPU execution.
 
 ## Outputs

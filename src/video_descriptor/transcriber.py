@@ -232,10 +232,15 @@ def diarize_audio(
 
     start = time.monotonic()
     log("Running speaker diarization")
-    diarize_model = whisperx_module.DiarizationPipeline(
-        use_auth_token=hf_token,
-        device=device,
-    )
+    try:
+        diarize_model = whisperx_module.DiarizationPipeline(
+            use_auth_token=hf_token,
+            device=device,
+        )
+    except AttributeError as exc:
+        if "'NoneType' object has no attribute 'to'" in str(exc):
+            raise RuntimeError(hf_diarization_access_message()) from exc
+        raise
     diarize_kwargs = speaker_count_kwargs(config)
     if diarize_kwargs:
         log(f"Diarization speaker constraints: {diarize_kwargs}")
@@ -247,6 +252,15 @@ def diarize_audio(
     del diarize_model
     free_memory(torch_module)
     return result
+
+
+def hf_diarization_access_message() -> str:
+    return (
+        "Could not load pyannote speaker diarization. Make sure your HF_TOKEN "
+        "is valid and that the same Hugging Face account has accepted the user "
+        "conditions for both https://huggingface.co/pyannote/segmentation-3.0 "
+        "and https://huggingface.co/pyannote/speaker-diarization-3.1."
+    )
 
 
 def speaker_count_kwargs(config: TranscriptionConfig) -> dict[str, int]:

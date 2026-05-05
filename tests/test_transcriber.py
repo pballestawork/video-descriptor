@@ -9,6 +9,7 @@ from video_descriptor.transcriber import (
     allow_trusted_whisperx_checkpoints,
     apply_person_labels,
     extract_audio,
+    hf_diarization_access_message,
     resolve_compute_type,
     run_transcription,
     speaker_count_kwargs,
@@ -54,6 +55,13 @@ class TranscriberTests(TestCase):
         self.assertEqual(speaker_map["SPEAKER_01"], "Persona B")
         self.assertEqual(result["segments"][0]["speaker_label"], "Persona A")
         self.assertEqual(result["segments"][1]["words"][0]["speaker_label"], "Persona B")
+
+    def test_hf_diarization_access_message_mentions_required_models(self) -> None:
+        message = hf_diarization_access_message()
+
+        self.assertIn("pyannote/segmentation-3.0", message)
+        self.assertIn("pyannote/speaker-diarization-3.1", message)
+        self.assertIn("HF_TOKEN", message)
 
     def test_torch_load_patch_forces_weights_only_false(self) -> None:
         calls = []

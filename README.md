@@ -57,6 +57,8 @@ If you stop the install cell manually, Colab will show a `KeyboardInterrupt`. Th
 
 PyTorch 2.6+ changed `torch.load` to use `weights_only=True` by default. WhisperX 3.3.0 loads a trusted pyannote VAD checkpoint that still needs the previous behavior, so the CLI sets `weights_only=False` inside the isolated transcription process before loading WhisperX models.
 
+After the heavy install has completed once, the install cell still force-updates only the lightweight `video-descriptor` package on later runs. This keeps Colab on the latest project code without reinstalling PyTorch.
+
 Run a transcription:
 
 ```bash

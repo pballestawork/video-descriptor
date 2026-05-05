@@ -8,10 +8,11 @@
 
 1. Open `notebooks/video_descriptor_colab.ipynb` in Colab.
 2. Select a GPU runtime: `Runtime > Change runtime type > Hardware accelerator > GPU`.
-3. Run the install cell.
-4. Upload a video when prompted.
-5. Run the transcription cell.
-6. Download the generated ZIP with transcript files.
+3. Run the install cell. The first run installs PyTorch/WhisperX and restarts the runtime.
+4. Run the same install cell again after the restart; it should print the installed versions and `Entorno listo.`
+5. Upload a video when prompted.
+6. Run the transcription cell.
+7. Download the generated ZIP with transcript files.
 
 The default model is `large-v3-turbo`, the default language is Spanish (`es`), and diarization is intentionally disabled in v1.
 
@@ -44,7 +45,7 @@ python -m pip install -e .
 python -m pip install -r requirements-colab.txt
 ```
 
-In Colab, use the notebook install cell. The project pins `whisperx==3.3.0`, `torch/torchaudio==2.8.0`, `numpy==2.0.2`, `pandas==2.2.2` and compatible `opentelemetry` packages. Current WhisperX releases can upgrade Colab to `numpy>=2.1`, `pandas>=3` and newer telemetry packages. Also, `pyannote.audio==3.3.2` needs `torchaudio.AudioMetaData`, which exists in `torchaudio==2.8.0` but was removed in `torchaudio>=2.9`. If you already ran a failed install, restart the runtime before running the updated install cell. The warning below from `apt-get update` is common in Colab and is not fatal:
+In Colab, use the notebook install cell. The project pins `whisperx==3.3.0`, `torch/torchaudio==2.8.0`, `numpy==2.0.2`, `pandas==2.2.2` and compatible `opentelemetry` packages. Current WhisperX releases can upgrade Colab to `numpy>=2.1`, `pandas>=3` and newer telemetry packages. Also, `pyannote.audio==3.3.2` needs `torchaudio.AudioMetaData`, which exists in `torchaudio==2.8.0` but was removed in `torchaudio>=2.9`. The install cell intentionally restarts the runtime after installing these packages; run it once to install/restart and a second time to verify. The warning below from `apt-get update` is common in Colab and is not fatal:
 
 ```text
 W: Skipping acquire of configured file 'main/source/Sources' ...

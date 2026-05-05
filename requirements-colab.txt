@@ -4,6 +4,13 @@
 # with Colab packages such as google-colab, cudf, numba, gradio and bqplot.
 whisperx==3.3.0
 
+# pyannote.audio 3.3.2, required by WhisperX 3.3.0, imports
+# torchaudio.AudioMetaData. That symbol exists in torchaudio 2.8 and is removed
+# from 2.9 onward, so keep the PyTorch stack on the last compatible family.
+torch==2.8.0
+torchaudio==2.8.0
+torchvision==0.23.0
+
 # Match Colab's expected scientific stack and avoid pandas/numpy resolver drift.
 numpy==2.0.2
 pandas==2.2.2

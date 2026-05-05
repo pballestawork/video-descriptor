@@ -53,6 +53,8 @@ W: Skipping acquire of configured file 'main/source/Sources' ...
 
 The first install can take several minutes because PyTorch CUDA wheels are large. The notebook prints each install step, elapsed time and `pip` download progress so you can see that Colab is still working.
 
+If you stop the install cell manually, Colab will show a `KeyboardInterrupt`. That only means the running `pip` process was cancelled. The notebook does not mark the install as complete until every step finishes, so the cleanest recovery is to delete the runtime and run the install cell again.
+
 Run a transcription:
 
 ```bash

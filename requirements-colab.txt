@@ -1,1 +1,19 @@
-whisperx
+# Keep this pinned for Google Colab compatibility.
+#
+# Newer WhisperX releases pull numpy>=2.1 and pandas>=2.2.3/3.x, which conflict
+# with Colab packages such as google-colab, cudf, numba, gradio and bqplot.
+whisperx==3.3.0
+
+# Match Colab's expected scientific stack and avoid pandas/numpy resolver drift.
+numpy==2.0.2
+pandas==2.2.2
+
+# WhisperX 3.3.0 does not need Transformers 5.x, and keeping 4.x avoids API drift.
+transformers>=4.48.0,<5
+huggingface-hub<1.0.0
+
+# If a previous install pulled pyannote.audio 4.x, these may have been upgraded
+# past the versions accepted by google-adk/opentelemetry-exporter-gcp-logging.
+opentelemetry-api==1.38.0
+opentelemetry-sdk==1.38.0
+opentelemetry-semantic-conventions==0.59b0

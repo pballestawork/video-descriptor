@@ -44,6 +44,12 @@ python -m pip install -e .
 python -m pip install -r requirements-colab.txt
 ```
 
+In Colab, use the notebook install cell. The project pins `whisperx==3.3.0`, `numpy==2.0.2`, `pandas==2.2.2` and compatible `opentelemetry` packages because current WhisperX releases can upgrade Colab to `numpy>=2.1`, `pandas>=3` and newer telemetry packages, which conflicts with preinstalled Colab packages. If you already ran an unpinned install and saw resolver conflicts, restart the runtime before running the updated install cell. The warning below from `apt-get update` is common in Colab and is not fatal:
+
+```text
+W: Skipping acquire of configured file 'main/source/Sources' ...
+```
+
 Run a transcription:
 
 ```bash

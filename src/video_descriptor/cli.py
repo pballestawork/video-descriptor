@@ -19,7 +19,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     transcribe.add_argument("input_video", type=Path)
     transcribe.add_argument("--output-dir", type=Path, default=Path("outputs"))
-    transcribe.add_argument("--model", default="large-v3-turbo")
+    transcribe.add_argument("--model", default="large-v3")
     transcribe.add_argument("--language", default="es")
     transcribe.add_argument("--batch-size", type=int, default=16)
     transcribe.add_argument("--compute-type", default="float16")

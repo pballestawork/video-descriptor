@@ -14,7 +14,7 @@
 6. Run the transcription cell.
 7. Download the generated ZIP with transcript files.
 
-The default model is `large-v3-turbo`, the default language is Spanish (`es`), and the Colab notebook enables diarization for two speakers by default.
+The default model is `large-v3` for best local Whisper quality, the default language is Spanish (`es`), and the Colab notebook enables diarization for two speakers by default. Use `large-v3-turbo` when speed matters more than accuracy.
 
 ## Large video note
 
@@ -64,7 +64,7 @@ Run a transcription:
 ```bash
 python -m video_descriptor transcribe INPUT_VIDEO \
   --output-dir outputs \
-  --model large-v3-turbo \
+  --model large-v3 \
   --language es \
   --batch-size 16 \
   --compute-type float16 \
@@ -83,6 +83,8 @@ python -m video_descriptor transcribe INPUT_VIDEO \
 ```
 
 Diarization uses pyannote through WhisperX and requires a Hugging Face token with access to the pyannote diarization model terms accepted. WhisperX assigns voice clusters, not real names, so the project maps speakers to `Persona A`, `Persona B`, etc.
+
+For tougher audio, prefer `--model large-v3`. `large-v3-turbo` is faster, but it is a pruned/distilled variant of `large-v3`, so it can miss more words in noisy, overlapped, low-volume, or domain-specific speech.
 
 Before running diarization, log in with the same Hugging Face account used for `HF_TOKEN` and accept both gated model terms:
 

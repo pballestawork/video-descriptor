@@ -18,7 +18,7 @@ from .formats import write_srt, write_txt, write_vtt
 class TranscriptionConfig:
     input_video: Path
     output_dir: Path
-    model: str = "large-v3-turbo"
+    model: str = "large-v3"
     language: str | None = "es"
     batch_size: int = 16
     compute_type: str = "float16"
